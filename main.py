@@ -52,9 +52,32 @@ class Ffmpeg:
                 print('Fetched video length (secs):', length_seconds)
                 return length_seconds
 
+    def has_audio(self, input_path):
+        """
+        Check if input has audio
+        """
+        result = subprocess.run([self.ffmpegLocation, '-i', input_path], stderr=subprocess.PIPE)
+        lines = result.stderr.splitlines()
+
+        for line in lines:
+            try:
+                decoded_line = line.decode('UTF-8')
+            except:
+                continue
+            x = re.search(r"Stream #\d+:\d+\[0x\d+\]\(und\): Audio:", decoded_line)
+            if x is not None:
+                return True
+        return False
+
     def ffmpeg_2pass(self, input_path: str, output_path: str, total_bitrate_kbps: int):
         audio_bitrate = total_bitrate_kbps * self.audioVideoBitrateRatios.audio
         video_bitrate = total_bitrate_kbps * self.audioVideoBitrateRatios.video
+
+        input_has_audio = self.has_audio(input_path)
+        if not input_has_audio:
+            audio_bitrate = 0
+            video_bitrate = total_bitrate_kbps
+
         # ffmpeg -i "$1" -pix_fmt yuv420p -c:v libvpx-vp9 -pass 1 -b:v $bitrate -threads 1 -speed 4 -tile-columns 0 -frame-parallel 0 -auto-alt-ref 1 -lag-in-frames 25 -g 9999 -aq-mode 0 -an -f null -
         # ffmpeg -i "$1" -pix_fmt yuv420p -c:v libvpx-vp9 -pass 2 -b:v $bitrate -threads 1 -speed 0 -tile-columns 0 -frame-parallel 0 -auto-alt-ref 1 -lag-in-frames 25 -g 9999 -aq-mode 0 -ac 2 -c:a libopus -frame_duration 120 -b:a $audiobitrate -f webm "$1"-2pass.webm
 
@@ -73,7 +96,7 @@ class Ffmpeg:
         # Passes
         for i in range(1, 3):
             local_preset = [preset[0], '4'] if i == 1 else preset
-            local_audio = ['-an'] if i == 1 else audio
+            local_audio = ['-an'] if i == 1 or not input_has_audio else audio
             local_format = ['-f', 'null'] if i == 1 else ['-f', 'webm']
             local_output = ['-'] if i == 1 else [output_path]
 
