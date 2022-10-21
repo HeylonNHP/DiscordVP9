@@ -119,12 +119,16 @@ def main():
     arguments = sys.argv
 
     mypath = arguments[1]
+    whitelisted_extensions = ['mp4']
     onlyfiles = [f for f in listdir(mypath) if isfile(join(mypath, f))]
     ffmpeg = Ffmpeg()
 
+    if len(arguments) > 2:
+        whitelisted_extensions = arguments[2].split(',')
+
     for file in onlyfiles:
         filepath = join(mypath, file)
-        if file[-3:].lower() == 'mp4':
+        if file[-3:].lower() in whitelisted_extensions:
             ffmpeg.ffmpeg_2pass_size_limit(filepath, filepath + '-2pass.webm', 8, 2000)
 
 
