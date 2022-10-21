@@ -73,6 +73,11 @@ class Ffmpeg:
         audio_bitrate = total_bitrate_kbps * self.audioVideoBitrateRatios.audio
         video_bitrate = total_bitrate_kbps * self.audioVideoBitrateRatios.video
 
+        # Limit audio to 128kbps max
+        if audio_bitrate > 128:
+            audio_bitrate = 128
+            video_bitrate = total_bitrate_kbps - audio_bitrate
+
         input_has_audio = self.has_audio(input_path)
         if not input_has_audio:
             audio_bitrate = 0
