@@ -64,8 +64,7 @@ class Ffmpeg:
                 decoded_line = line.decode('UTF-8')
             except:
                 continue
-            x = re.search(r"Stream #\d+:\d+\[0x\d+\]\(und\): Audio:", decoded_line)
-            if x is not None:
+            if "Stream".lower() in decoded_line.lower() and "Audio".lower() in decoded_line.lower():
                 return True
         return False
 
