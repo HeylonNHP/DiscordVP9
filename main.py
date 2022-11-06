@@ -82,17 +82,16 @@ class Ffmpeg:
             audio_bitrate = 0
             video_bitrate = total_bitrate_kbps
 
-        # ffmpeg -i "$1" -pix_fmt yuv420p -c:v libvpx-vp9 -pass 1 -b:v $bitrate -threads 1 -speed 4 -tile-columns 0 -frame-parallel 0 -auto-alt-ref 1 -lag-in-frames 25 -g 9999 -aq-mode 0 -an -f null -
-        # ffmpeg -i "$1" -pix_fmt yuv420p -c:v libvpx-vp9 -pass 2 -b:v $bitrate -threads 1 -speed 0 -tile-columns 0 -frame-parallel 0 -auto-alt-ref 1 -lag-in-frames 25 -g 9999 -aq-mode 0 -ac 2 -c:a libopus -frame_duration 120 -b:a $audiobitrate -f webm "$1"-2pass.webm
-
         input_cmd = ['-y', '-i', input_path]
         pix_fmt = ['-pix_fmt', 'yuv420p']
         codec = ['-c:v', 'libvpx-vp9']
         bitrate = ['-b:v', str(video_bitrate) + 'k']
         preset = ['-speed', '0']
         parallelism = [
-            '-threads', '1', '-tile-columns', '0', '-frame-parallel', '0', '-auto-alt-ref', '1']
-        lag_in_frames = ['-lag-in-frames', '25']
+            '-threads', '4', '-tile-rows', '0', '-tile-columns', '1', '-frame-parallel', '0', '-auto-alt-ref', '1',
+            '-row-mt', '1']
+        lag_in_frames = ['-lag-in-frames', '25', '-arnr-maxframes', '25']
+        tpl = ['-enable-tpl', '1']
         keyframes = ['-g', '9999']
         aq_mode = ['-aq-mode', '0']
         audio = ['-ac', '2', '-c:a', 'libopus', '-frame_duration', '120', '-b:a', str(audio_bitrate) + 'k']
@@ -106,7 +105,7 @@ class Ffmpeg:
 
             self.run_ffmpeg(
                 input_cmd + pix_fmt + codec + ['-pass',
-                                               str(i)] + bitrate + local_preset + parallelism + lag_in_frames + keyframes + aq_mode + local_audio + local_format + local_output)
+                                               str(i)] + bitrate + local_preset + parallelism + lag_in_frames + tpl + keyframes + aq_mode + local_audio + local_format + local_output)
 
     def ffmpeg_2pass_size_limit(self, input_path: str, output_path: str, size_in_mb: float, bitrate_limit: int):
         video_length_seconds = self.get_length(input_path)
