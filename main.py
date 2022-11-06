@@ -86,6 +86,7 @@ class Ffmpeg:
         pix_fmt = ['-pix_fmt', 'yuv420p']
         codec = ['-c:v', 'libvpx-vp9']
         bitrate = ['-b:v', str(video_bitrate) + 'k']
+        quality = ['-quality', 'best']
         preset = ['-speed', '0']
         parallelism = [
             '-threads', '4', '-tile-rows', '0', '-tile-columns', '1', '-frame-parallel', '0', '-auto-alt-ref', '1',
@@ -105,7 +106,7 @@ class Ffmpeg:
 
             self.run_ffmpeg(
                 input_cmd + pix_fmt + codec + ['-pass',
-                                               str(i)] + bitrate + local_preset + parallelism + lag_in_frames + tpl + keyframes + aq_mode + local_audio + local_format + local_output)
+                                               str(i)] + bitrate + quality + local_preset + parallelism + lag_in_frames + tpl + keyframes + aq_mode + local_audio + local_format + local_output)
 
     def ffmpeg_2pass_size_limit(self, input_path: str, output_path: str, size_in_mb: float, bitrate_limit: int):
         video_length_seconds = self.get_length(input_path)
